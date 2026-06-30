@@ -100,6 +100,15 @@
   button:hover{background:#dab863;}
   button:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;}
 
+  .rate-toggle{display:flex;gap:8px;}
+  .rate-opt{
+    flex:1;margin:0;background:var(--panel-2);color:var(--muted);
+    border:1px solid var(--line);padding:10px;font-family:var(--mono);
+    font-size:13px;letter-spacing:1px;cursor:pointer;border-radius:2px;transition:.15s;
+  }
+  .rate-opt:hover{border-color:var(--gold-dim);color:var(--ink);}
+  .rate-opt.active{background:var(--gold);color:#10180f;border-color:var(--gold);font-weight:600;}
+
   .summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin-bottom:18px;border:1px solid var(--line);}
   .summary-bar .cell{background:var(--panel);padding:16px 18px;}
   .summary-bar .cell .lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
@@ -139,7 +148,7 @@
     </div>
     <div class="ticker">
       <div>Comissão aplicada</div>
-      <div class="rate">1,00%</div>
+      <div class="rate" id="headerRate">1,00%</div>
     </div>
   </header>
 
@@ -176,9 +185,17 @@
         </div>
       </div>
 
+      <div class="field">
+        <label>Taxa de comissão</label>
+        <div class="rate-toggle">
+          <button type="button" class="rate-opt active" data-rate="1">1%</button>
+          <button type="button" class="rate-opt" data-rate="3">3%</button>
+        </div>
+      </div>
+
       <div class="preview">
         <div class="line"><span>Deságio informado</span><span id="pvDesagio">R$ 0,00</span></div>
-        <div class="line"><span>Taxa de comissão</span><span>1,00%</span></div>
+        <div class="line"><span>Taxa de comissão</span><span id="pvTaxa">1,00%</span></div>
         <div class="total">
           <span class="lbl">Sua comissão</span>
           <span class="val" id="pvComissao">R$ 0,00</span>
@@ -223,11 +240,23 @@ window.storage = localStore;
 
 const $ = id => document.getElementById(id);
 const fCedente = $('fCedente'), fDesagio = $('fDesagio'), fData = $('fData');
-const pvDesagio = $('pvDesagio'), pvComissao = $('pvComissao');
+const pvDesagio = $('pvDesagio'), pvComissao = $('pvComissao'), pvTaxa = $('pvTaxa');
 const btnAdd = $('btnAdd'), statusEl = $('status'), tableWrap = $('tableWrap');
 const sumCount = $('sumCount'), sumDesagio = $('sumDesagio'), sumComissao = $('sumComissao');
+const headerRate = $('headerRate');
+const rateButtons = document.querySelectorAll('.rate-opt');
 
 let registros = [];
+let taxaAtual = 1; // percentual selecionado (1 ou 3)
+
+rateButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    taxaAtual = parseFloat(btn.dataset.rate);
+    rateButtons.forEach(b=>b.classList.toggle('active', b===btn));
+    headerRate.textContent = taxaAtual.toFixed(2).replace('.', ',') + '%';
+    updatePreview();
+  });
+});
 
 function brl(n){
   return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
@@ -242,8 +271,9 @@ function parseValor(str){
 
 function updatePreview(){
   const v = parseValor(fDesagio.value);
-  const c = v * 0.01;
+  const c = v * (taxaAtual / 100);
   pvDesagio.textContent = brl(v);
+  pvTaxa.textContent = taxaAtual.toFixed(2).replace('.', ',') + '%';
   pvComissao.textContent = brl(c);
 }
 fDesagio.addEventListener('input', updatePreview);
@@ -305,7 +335,7 @@ function renderTable(){
     html += `<tr>
       <td>
         <div class="cedente-name">${escapeHtml(r.cedente)}</div>
-        <div class="meta">Deságio ${brl(r.desagio)} · ${dataFmt}</div>
+        <div class="meta">Deságio ${brl(r.desagio)} · taxa ${(r.taxa||1).toFixed(2).replace('.', ',')}% · ${dataFmt}</div>
         <button class="del" data-id="${r.id}">remover</button>
       </td>
       <td>${brl(r.comissao)}</td>
@@ -357,9 +387,9 @@ async function adicionarRegistro(){
     return;
   }
 
-  const comissao = desagio * 0.01;
+  const comissao = desagio * (taxaAtual / 100);
   const id = 'r' + Date.now() + Math.random().toString(36).slice(2,7);
-  const registro = { id, cedente, desagio, comissao, data, criadoEm: Date.now() };
+  const registro = { id, cedente, desagio, comissao, taxa: taxaAtual, data, criadoEm: Date.now() };
 
   btnAdd.disabled = true;
   try{
@@ -376,6 +406,9 @@ async function adicionarRegistro(){
     fCedente.value = '';
     fDesagio.value = '';
     fData.value = todayISO();
+    taxaAtual = 1;
+    rateButtons.forEach(b=>b.classList.toggle('active', b.dataset.rate==='1'));
+    headerRate.textContent = '1,00%';
     updatePreview();
     setStatus('Lançamento salvo', true);
   }catch(e){
