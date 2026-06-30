@@ -203,6 +203,24 @@
 const STORAGE_KEY_PREFIX = 'cessao:';
 const LIST_INDEX_KEY = 'cessao:_index';
 
+// Armazenamento local no navegador (funciona ao abrir o arquivo direto do computador)
+const localStore = {
+  async get(key){
+    const v = localStorage.getItem(key);
+    if(v === null) throw new Error('not found');
+    return { key, value: v };
+  },
+  async set(key, value){
+    localStorage.setItem(key, value);
+    return { key, value };
+  },
+  async delete(key){
+    localStorage.removeItem(key);
+    return { key, deleted: true };
+  }
+};
+window.storage = localStore;
+
 const $ = id => document.getElementById(id);
 const fCedente = $('fCedente'), fDesagio = $('fDesagio'), fData = $('fData');
 const pvDesagio = $('pvDesagio'), pvComissao = $('pvComissao');
