@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Carteira de Cessões</title>
+<style>
+  :root{
+    --bg: #0b1210;
+    --panel: #111b18;
+    --panel-2: #0e1815;
+    --line: #1f2e29;
+    --ink: #e6efe9;
+    --muted: #7d9189;
+    --gold: #c9a24b;
+    --gold-dim: #8c7438;
+    --green: #3fae6e;
+    --red: #c4554a;
+    --mono: "IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+    --serif: "Georgia","Iowan Old Style",serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--mono);
+    min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:36px 20px 80px;}
+
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;margin-bottom:28px;
+  }
+  .brand{display:flex;flex-direction:column;gap:4px;}
+  .brand .mark{
+    font-family:var(--serif);
+    font-size:28px;letter-spacing:0.5px;color:var(--gold);
+  }
+  .brand .sub{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;}
+  .ticker{text-align:right;font-size:11px;color:var(--muted);}
+  .ticker .rate{color:var(--gold);font-size:14px;}
+
+  .grid{display:grid;grid-template-columns:1fr 1.4fr;gap:20px;}
+  @media (max-width:760px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:22px;
+  }
+  .panel h2{
+    font-family:var(--serif);
+    font-weight:normal;
+    font-size:15px;
+    margin:0 0 18px;
+    color:var(--ink);
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel h2::before{
+    content:"";display:block;width:3px;height:14px;background:var(--gold);
+  }
+
+  label{
+    display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--muted);margin-bottom:6px;
+  }
+  .field{margin-bottom:16px;}
+  input{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--ink);padding:10px 12px;font-family:var(--mono);font-size:14px;
+    border-radius:2px;outline:none;transition:border-color .15s;
+  }
+  input:focus{border-color:var(--gold-dim);}
+  input::placeholder{color:#3d4a44;}
+
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  .preview{
+    margin-top:4px;padding:14px 16px;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:2px;
+  }
+  .preview .line{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--muted);}
+  .preview .line span:last-child{color:var(--ink);}
+  .preview .total{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-top:8px;padding-top:10px;border-top:1px solid var(--line);
+  }
+  .preview .total .lbl{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .preview .total .val{font-family:var(--serif);font-size:24px;color:var(--gold);}
+
+  button{
+    margin-top:16px;width:100%;background:var(--gold);color:#10180f;
+    border:none;padding:12px;font-family:var(--mono);font-size:12px;
+    letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-radius:2px;
+    transition:background .15s;
+  }
+  button:hover{background:#dab863;}
+  button:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;}
+
+  .summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin-bottom:18px;border:1px solid var(--line);}
+  .summary-bar .cell{background:var(--panel);padding:16px 18px;}
+  .summary-bar .cell .lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .summary-bar .cell .num{font-family:var(--serif);font-size:22px;color:var(--ink);}
+  .summary-bar .cell.gold .num{color:var(--gold);}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{
+    text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--muted);font-weight:normal;padding:0 10px 10px;border-bottom:1px solid var(--line);
+  }
+  thead th:last-child{text-align:right;}
+  tbody td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody td:last-child{text-align:right;color:var(--gold);font-family:var(--serif);font-size:14px;}
+  tbody tr:hover{background:rgba(201,162,75,0.04);}
+  .cedente-name{color:var(--ink);font-weight:600;}
+  .meta{color:var(--muted);font-size:11px;margin-top:2px;}
+  .del{
+    background:none;border:none;color:var(--muted);cursor:pointer;
+    font-family:var(--mono);font-size:11px;padding:0;margin-top:8px;width:auto;text-decoration:underline;
+  }
+  .del:hover{color:var(--red);background:none;}
+
+  .empty{padding:40px 10px;text-align:center;color:var(--muted);font-size:12px;}
+  .status{font-size:10px;color:var(--muted);margin-top:14px;text-align:center;letter-spacing:1px;}
+  .status.ok::before{content:"● ";color:var(--green);}
+  .status.err::before{content:"● ";color:var(--red);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="mark">Cessões &amp; Recebíveis</div>
+      <div class="sub">Painel de cedentes · taxa de comissão fixa</div>
+    </div>
+    <div class="ticker">
+      <div>Comissão aplicada</div>
+      <div class="rate">1,00%</div>
+    </div>
+  </header>
+
+  <div class="summary-bar">
+    <div class="cell">
+      <div class="lbl">Cedentes lançados</div>
+      <div class="num" id="sumCount">0</div>
+    </div>
+    <div class="cell">
+      <div class="lbl">Deságio total</div>
+      <div class="num" id="sumDesagio">R$ 0,00</div>
+    </div>
+    <div class="cell gold">
+      <div class="lbl">Comissão acumulada</div>
+      <div class="num" id="sumComissao">R$ 0,00</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Novo lançamento</h2>
+      <div class="field">
+        <label>Cedente</label>
+        <input id="fCedente" type="text" placeholder="Nome do cedente">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Valor do deságio (R$)</label>
+          <input id="fDesagio" type="text" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div class="field">
+          <label>Data</label>
+          <input id="fData" type="date">
+        </div>
+      </div>
+
+      <div class="preview">
+        <div class="line"><span>Deságio informado</span><span id="pvDesagio">R$ 0,00</span></div>
+        <div class="line"><span>Taxa de comissão</span><span>1,00%</span></div>
+        <div class="total">
+          <span class="lbl">Sua comissão</span>
+          <span class="val" id="pvComissao">R$ 0,00</span>
+        </div>
+      </div>
+
+      <button id="btnAdd">Salvar lançamento</button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Cedentes indicados</h2>
+      <div id="tableWrap">
+        <div class="empty">Nenhum cedente lançado ainda.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY_PREFIX = 'cessao:';
+const LIST_INDEX_KEY = 'cessao:_index';
+
+const $ = id => document.getElementById(id);
+const fCedente = $('fCedente'), fDesagio = $('fDesagio'), fData = $('fData');
+const pvDesagio = $('pvDesagio'), pvComissao = $('pvComissao');
+const btnAdd = $('btnAdd'), statusEl = $('status'), tableWrap = $('tableWrap');
+const sumCount = $('sumCount'), sumDesagio = $('sumDesagio'), sumComissao = $('sumComissao');
+
+let registros = [];
+
+function brl(n){
+  return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+}
+
+function parseValor(str){
+  if(!str) return 0;
+  const cleaned = str.replace(/[^\d,.-]/g,'').replace(/\.(?=\d{3}(,|$))/g,'').replace(',', '.');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
+function updatePreview(){
+  const v = parseValor(fDesagio.value);
+  const c = v * 0.01;
+  pvDesagio.textContent = brl(v);
+  pvComissao.textContent = brl(c);
+}
+fDesagio.addEventListener('input', updatePreview);
+
+function setStatus(msg, ok){
+  statusEl.textContent = msg;
+  statusEl.className = 'status ' + (ok ? 'ok' : 'err');
+  if(msg) setTimeout(()=>{ statusEl.textContent=''; statusEl.className='status'; }, 2500);
+}
+
+function todayISO(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+fData.value = todayISO();
+
+async function loadIndex(){
+  try{
+    const res = await window.storage.get(LIST_INDEX_KEY, false);
+    return res ? JSON.parse(res.value) : [];
+  }catch(e){
+    return [];
+  }
+}
+
+async function saveIndex(ids){
+  await window.storage.set(LIST_INDEX_KEY, JSON.stringify(ids), false);
+}
+
+async function loadAll(){
+  const ids = await loadIndex();
+  const items = [];
+  for(const id of ids){
+    try{
+      const res = await window.storage.get(STORAGE_KEY_PREFIX + id, false);
+      if(res) items.push(JSON.parse(res.value));
+    }catch(e){ /* skip missing */ }
+  }
+  items.sort((a,b)=> b.criadoEm - a.criadoEm);
+  return items;
+}
+
+function renderSummary(){
+  const totalDesagio = registros.reduce((s,r)=>s+r.desagio,0);
+  const totalComissao = registros.reduce((s,r)=>s+r.comissao,0);
+  sumCount.textContent = registros.length;
+  sumDesagio.textContent = brl(totalDesagio);
+  sumComissao.textContent = brl(totalComissao);
+}
+
+function renderTable(){
+  if(registros.length === 0){
+    tableWrap.innerHTML = '<div class="empty">Nenhum cedente lançado ainda.</div>';
+    return;
+  }
+  let html = '<table><thead><tr><th>Cedente</th><th>Comissão</th></tr></thead><tbody>';
+  for(const r of registros){
+    const dataFmt = r.data ? new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    html += `<tr>
+      <td>
+        <div class="cedente-name">${escapeHtml(r.cedente)}</div>
+        <div class="meta">Deságio ${brl(r.desagio)} · ${dataFmt}</div>
+        <button class="del" data-id="${r.id}">remover</button>
+      </td>
+      <td>${brl(r.comissao)}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  tableWrap.innerHTML = html;
+
+  tableWrap.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await removerRegistro(btn.dataset.id);
+    });
+  });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function removerRegistro(id){
+  try{
+    await window.storage.delete(STORAGE_KEY_PREFIX + id, false);
+    const ids = await loadIndex();
+    await saveIndex(ids.filter(x=>x!==id));
+    registros = registros.filter(r=>r.id!==id);
+    renderTable();
+    renderSummary();
+    setStatus('Lançamento removido', true);
+  }catch(e){
+    setStatus('Erro ao remover', false);
+  }
+}
+
+async function adicionarRegistro(){
+  const cedente = fCedente.value.trim();
+  const desagio = parseValor(fDesagio.value);
+  const data = fData.value || todayISO();
+
+  if(!cedente){
+    setStatus('Informe o nome do cedente', false);
+    fCedente.focus();
+    return;
+  }
+  if(desagio <= 0){
+    setStatus('Informe um valor de deságio válido', false);
+    fDesagio.focus();
+    return;
+  }
+
+  const comissao = desagio * 0.01;
+  const id = 'r' + Date.now() + Math.random().toString(36).slice(2,7);
+  const registro = { id, cedente, desagio, comissao, data, criadoEm: Date.now() };
+
+  btnAdd.disabled = true;
+  try{
+    const saved = await window.storage.set(STORAGE_KEY_PREFIX + id, JSON.stringify(registro), false);
+    if(!saved) throw new Error('falha ao salvar');
+    const ids = await loadIndex();
+    ids.push(id);
+    await saveIndex(ids);
+
+    registros.unshift(registro);
+    renderTable();
+    renderSummary();
+
+    fCedente.value = '';
+    fDesagio.value = '';
+    fData.value = todayISO();
+    updatePreview();
+    setStatus('Lançamento salvo', true);
+  }catch(e){
+    setStatus('Erro ao salvar — tente novamente', false);
+  }finally{
+    btnAdd.disabled = false;
+  }
+}
+
+btnAdd.addEventListener('click', adicionarRegistro);
+fCedente.addEventListener('keydown', e=>{ if(e.key==='Enter') fDesagio.focus(); });
+fDesagio.addEventListener('keydown', e=>{ if(e.key==='Enter') adicionarRegistro(); });
+
+(async function init(){
+  updatePreview();
+  try{
+    registros = await loadAll();
+    renderTable();
+    renderSummary();
+  }catch(e){
+    tableWrap.innerHTML = '<div class="empty">Erro ao carregar dados salvos.</div>';
+  }
+})();
+</script>
+</body>
+</html>
