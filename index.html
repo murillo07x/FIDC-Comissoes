@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conferência de Fretes — Fatura × DACTE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --paper: #F2F4F7;
+    --paper-2: #E6EAEF;
+    --ink: #0F2A47;
+    --ink-soft: #3D5872;
+    --line: #CBD5DF;
+    --stamp-red: #B23A2E;
+    --stamp-red-bg: #F5E3E0;
+    --stamp-green: #1E6E4F;
+    --stamp-green-bg: #E1EFE7;
+    --gold: #E8790E;
+    --gold-2: #F5A623;
+    --shadow: 0 1px 2px rgba(15,42,71,0.07), 0 6px 20px rgba(15,42,71,0.06);
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  body{
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--paper) 1px, transparent 1px);
+    background-size: 100% 32px;
+  }
+  h1, h2, h3, .serif{ font-family: 'IBM Plex Serif', serif; }
+  .wrap{
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  header.top{
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  header.top::before{
+    content: '';
+    display: block;
+    width: 46px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-2));
+    margin-bottom: 14px;
+  }
+  .brand-row{
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 12px;
+  }
+  .brand-logo{
+    height: 56px;
+    width: auto;
+    flex-shrink: 0;
+  }
+  .brand-text{
+    display: flex;
+    flex-direction: column;
+  }
+  .brand-text .eyebrow{
+    margin: 0 0 4px;
+  }
+  .brand-text h1{
+    margin: 0;
+  }
+  .eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+  }
+  h1{
+    font-size: 34px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  .sub{
+    font-size: 14px;
+    color: var(--ink-soft);
+    max-width: 620px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .step-label{
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    display: block;
+  }
+  .grid-2{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 640px){
+    .grid-2{ grid-template-columns: 1fr; }
+  }
+  .drop{
+    border: 2px dashed var(--line);
+    background: #fff;
+    border-radius: 3px;
+    padding: 24px 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    position: relative;
+    box-shadow: var(--shadow);
+  }
+  .drop:hover, .drop.dragover{
+    border-color: var(--ink);
+    background: var(--paper-2);
+  }
+  .drop input{
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .drop .icon{
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  .drop .ttl{
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .drop .hint{
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .drop .file-list{
+    margin-top: 12px;
+    font-size: 12px;
+    text-align: left;
+    color: var(--ink);
+    line-height: 1.6;
+    word-break: break-all;
+  }
+  .drop .file-list span{
+    display: block;
+    padding: 2px 6px;
+    background: var(--paper-2);
+    border-radius: 2px;
+    margin-bottom: 3px;
+  }
+  button.primary{
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 14px 26px;
+    border-radius: 3px;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: var(--shadow);
+    transition: background .15s ease, transform .1s ease;
+  }
+  button.primary:active:not(:disabled){
+    transform: translateY(1px);
+  }
+  button.primary:disabled{
+    background: var(--ink-soft);
+    cursor: not-allowed;
+    opacity: .6;
+  }
+  button.primary:hover:not(:disabled){
+    background: var(--ink-soft);
+  }
+  .status-line{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 10px;
+    min-height: 16px;
+  }
+
+  #results{
+    margin-top: 48px;
+    display: none;
+  }
+  .result-card{
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .result-card::before{
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-2));
+  }
+  .section-title{
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .info-grid{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px 24px;
+  }
+  @media (max-width: 720px){
+    .info-grid{ grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px){
+    .info-grid{ grid-template-columns: 1fr; }
+  }
+  .info-item .label{
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .info-item .value-row{
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .info-item .value{
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    word-break: break-word;
+  }
+  .info-item.wide{
+    grid-column: 1 / -1;
+  }
+  .info-item .value.money{
+    font-size: 20px;
+    color: var(--stamp-green);
+  }
+  .info-item .value.pending-value{
+    color: var(--stamp-red);
+  }
+  .stamp{
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    border: 3px solid var(--stamp-green);
+    color: var(--stamp-green);
+    padding: 8px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transform: rotate(-6deg);
+    border-radius: 4px;
+    background: var(--stamp-green-bg);
+    opacity: 0.92;
+  }
+  .stamp.pending{
+    border-color: var(--stamp-red);
+    color: var(--stamp-red);
+    background: var(--stamp-red-bg);
+  }
+  .copy-btn{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 6px 10px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .copy-btn:hover{ background: var(--line); }
+  .copy-btn.copied{ background: var(--stamp-green); color: #fff; border-color: var(--stamp-green); }
+
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th{
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 2px solid var(--ink);
+    padding: 8px 10px;
+  }
+  tbody td{
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody tr.err td{
+    background: var(--stamp-red-bg);
+    color: var(--stamp-red);
+  }
+  .chave-cell{
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    word-break: break-all;
+  }
+  .table-actions{
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .notice-box{
+    border-radius: 2px;
+    padding: 16px 18px;
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .notice-box.errors{
+    background: var(--stamp-red-bg);
+    border: 1px solid var(--stamp-red);
+    color: var(--stamp-red);
+  }
+  .notice-box.warnings{
+    background: #F6F2E4;
+    border: 1px solid #B08B3F;
+    color: #7A5E28;
+  }
+  .notice-box.info{
+    background: var(--paper-2);
+    border: 1px solid var(--ink-soft);
+    color: var(--ink);
+  }
+  .notice-box h3{
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+  }
+  .notice-box ul{
+    margin: 0;
+    padding-left: 18px;
+  }
+  .notice-box li{ margin-bottom: 6px; }
+
+  footer{
+    margin-top: 60px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand-row">
+      <img src="cdl-logo.png" alt="CDL — Centro de Distribuição e Logística" class="brand-logo">
+      <div class="brand-text">
+        <p class="eyebrow">CDL · Centro de Distribuição e Logística</p>
+        <h1>Conferência de Fretes</h1>
+      </div>
+    </div>
+    <p class="sub">Confere o CNPJ do pagador, casa o número do CT-e da fatura com o DACTE correspondente, compara os valores de frete e extrai a chave de acesso — pronto para colar no SSW.</p>
+  </header>
+
+  <div class="grid-2">
+    <div>
+      <span class="step-label">1 · Fatura (SSW / CDL)</span>
+      <label class="drop" id="dropFatura">
+        <input type="file" id="inputFatura" accept="application/pdf">
+        <div class="icon">📄</div>
+        <div class="ttl">Solte a fatura aqui</div>
+        <div class="hint">ou clique para escolher o PDF</div>
+        <div class="file-list" id="listFatura"></div>
+      </label>
+    </div>
+    <div>
+      <span class="step-label">2 · DACTE(s)</span>
+      <label class="drop" id="dropDacte">
+        <input type="file" id="inputDacte" accept="application/pdf" multiple>
+        <div class="icon">📑</div>
+        <div class="ttl">Solte o(s) DACTE(s) aqui</div>
+        <div class="hint">um ou vários PDFs — pode soltar todos juntos</div>
+        <div class="file-list" id="listDacte"></div>
+      </label>
+    </div>
+  </div>
+
+  <button class="primary" id="btnProcess" disabled>Processar documentos</button>
+  <div class="status-line" id="statusLine"></div>
+
+  <div id="results">
+    <div class="result-card">
+      <div class="stamp" id="stampBadge">Conferido</div>
+
+      <h2 class="section-title">Dados da fatura</h2>
+      <div class="info-grid">
+        <div class="info-item wide">
+          <span class="label">Pagador</span>
+          <div class="value-row">
+            <span class="value" id="pagadorOut">—</span>
+            <button class="copy-btn" data-copy-target="pagadorOut">copiar</button>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="label">CNPJ do pagador</span>
+          <div class="value-row">
+            <span class="value" id="cnpjOut">—</span>
+            <button class="copy-btn" data-copy-target="cnpjOut">copiar</button>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="label">Nº da fatura</span>
+          <div class="value-row">
+            <span class="value" id="numeroFaturaOut">—</span>
+            <button class="copy-btn" data-copy-target="numeroFaturaOut">copiar</button>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="label">Emissão</span>
+          <div class="value-row">
+            <span class="value" id="emissaoOut">—</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="label">Vencimento</span>
+          <div class="value-row">
+            <span class="value" id="vencimentoOut">—</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="label">Valor do documento</span>
+          <div class="value-row">
+            <span class="value money" id="valorOut">—</span>
+            <button class="copy-btn" data-copy-target="valorOut">copiar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <h2 class="section-title">Conferência CT-e × DACTE</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Devolução</th>
+            <th>CT-e</th>
+            <th>Nota fiscal</th>
+            <th>Frete (Fatura)</th>
+            <th>Frete (DACTE)</th>
+            <th>Chave de acesso (CT-e)</th>
+            <th>Chave de acesso (NF-e)</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+      <div class="table-actions">
+        <button class="copy-btn" id="copyNfsBtn">copiar nºs de notas</button>
+        <button class="copy-btn" id="copyTableBtn">copiar tabela</button>
+      </div>
+    </div>
+
+    <div class="notice-box info" id="infoBox" style="display:none;">
+      <h3>Observações</h3>
+      <ul id="infoList"></ul>
+    </div>
+
+    <div class="notice-box errors" id="errorsBox" style="display:none;">
+      <h3>Pendências encontradas</h3>
+      <ul id="errorsList"></ul>
+    </div>
+
+    <div class="notice-box warnings" id="warningsBox" style="display:none;">
+      <h3>Observações</h3>
+      <ul id="warningsList"></ul>
+    </div>
+  </div>
+
+  <footer>Processado inteiramente no navegador — nenhum arquivo é enviado a servidores.</footer>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let faturaFile = null;
+let dacteFiles = [];
+let currentResults = [];
+
+const inputFatura = document.getElementById('inputFatura');
+const inputDacte = document.getElementById('inputDacte');
+const dropFatura = document.getElementById('dropFatura');
+const dropDacte = document.getElementById('dropDacte');
+const listFatura = document.getElementById('listFatura');
+const listDacte = document.getElementById('listDacte');
+const btnProcess = document.getElementById('btnProcess');
+const statusLine = document.getElementById('statusLine');
+
+function renderFileList(el, files){
+  el.innerHTML = '';
+  files.forEach(f => {
+    const s = document.createElement('span');
+    s.textContent = f.name;
+    el.appendChild(s);
+  });
+}
+
+function updateButtonState(){
+  btnProcess.disabled = !(faturaFile && dacteFiles.length > 0);
+}
+
+inputFatura.addEventListener('change', (e) => {
+  if(e.target.files && e.target.files[0]){
+    faturaFile = e.target.files[0];
+    renderFileList(listFatura, [faturaFile]);
+  }
+  updateButtonState();
+});
+
+inputDacte.addEventListener('change', (e) => {
+  if(e.target.files && e.target.files.length){
+    dacteFiles = Array.from(e.target.files);
+    renderFileList(listDacte, dacteFiles);
+  }
+  updateButtonState();
+});
+
+[dropFatura, dropDacte].forEach(drop => {
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('dragover'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+});
+
+dropFatura.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropFatura.classList.remove('dragover');
+  if(e.dataTransfer.files && e.dataTransfer.files[0]){
+    faturaFile = e.dataTransfer.files[0];
+    renderFileList(listFatura, [faturaFile]);
+  }
+  updateButtonState();
+});
+
+dropDacte.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropDacte.classList.remove('dragover');
+  if(e.dataTransfer.files && e.dataTransfer.files.length){
+    dacteFiles = Array.from(e.dataTransfer.files);
+    renderFileList(listDacte, dacteFiles);
+  }
+  updateButtonState();
+});
+
+function onlyDigits(s){
+  return (s || '').replace(/\D/g, '');
+}
+
+// SSW gera o texto de cada campo duas vezes seguidas (truque de "negrito" via
+// redesenho do texto), então uma string capturada às vezes vem duplicada
+// (ex.: "00001364400001364" -> na verdade é "0000136" repetido). Esta função
+// detecta esse padrão e devolve só a primeira metade quando aplicável.
+function dedupeDoubled(s){
+  if(!s) return s;
+  const n = s.length;
+  if(n % 2 === 0){
+    const half = n / 2;
+    if(s.slice(0, half) === s.slice(half)) return s.slice(0, half);
+  }
+  return s;
+}
+
+// Extrai o texto de cada página SEM reordenar por posição (x/y). O gerador
+// SSW desenha o mesmo texto duas vezes com um offset mínimo para simular
+// negrito; reordenar por coordenada intercala os caracteres das duas cópias
+// e corrompe o texto. Manter a ordem original do fluxo do PDF evita isso.
+async function extractPdfPages(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const pages = [];
+  for(let i = 1; i <= pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const text = content.items.map(it => it.str).join('');
+    pages.push(text);
+  }
+  return pages;
+}
+
+function extractRowsFromTableText(tableText){
+  const ctes = [];
+  const nfs = [];
+  const fretes = [];
+
+  const cteRegex = /\d\s(\d{4,9})\s?\d{2}\/\d{2}\/\d{2}/g;
+  const cteMatches = [...tableText.matchAll(cteRegex)];
+  cteMatches.forEach(m => ctes.push(m[1]));
+
+  const nfRegex = /(?<!\d)\d\s?(\d{9})\s?[\d.]+,\d{2}/g;
+  let m;
+  while((m = nfRegex.exec(tableText)) !== null){
+    nfs.push(m[1]);
+  }
+
+  // "Frete R$" é sempre a última coluna monetária da linha. Em vez de contar
+  // colunas (que variam de posição), fatiamos o texto de cada linha (do início
+  // de um CT-e até o início do próximo) e pegamos o último valor no formato
+  // "1.234,56" dentro dela — não importa quantas colunas existam antes.
+  for(let i = 0; i < cteMatches.length; i++){
+    const segStart = cteMatches[i].index;
+    const segEnd = i + 1 < cteMatches.length ? cteMatches[i + 1].index : tableText.length;
+    const segment = tableText.slice(segStart, segEnd);
+    const moneyMatches = [...segment.matchAll(/\d[\d.]*,\d{2}/g)];
+    fretes.push(moneyMatches.length ? moneyMatches[moneyMatches.length - 1][0] : null);
+  }
+
+  return { ctes, nfs, fretes };
+}
+
+// Converte "1.234,56" (formato BR) em número, para comparar valores mesmo que
+// a formatação (separador de milhar presente ou não) varie entre documentos.
+function parseMoneyBR(s){
+  if(!s) return null;
+  const n = parseFloat(s.replace(/\./g, '').replace(',', '.'));
+  return isNaN(n) ? null : n;
+}
+
+// Extrai valores monetários deduplicados logo após uma âncora de texto. O
+// gerador SSW desenha cada valor duas vezes (efeito negrito), então valores
+// idênticos adjacentes são uma única informação, não duas.
+function extractDedupedMoneyAfter(text, anchor, windowSize){
+  const idx = text.indexOf(anchor);
+  if(idx === -1) return null;
+  const windowText = text.slice(idx, idx + windowSize);
+  const tokens = [...windowText.matchAll(/\d[\d.]*,\d{2}/g)].map(mm => mm[0]);
+  const deduped = [];
+  for(let i = 0; i < tokens.length; i++){
+    if(i > 0 && tokens[i] === tokens[i - 1]) continue;
+    deduped.push(tokens[i]);
+  }
+  return deduped;
+}
+
+function findAllSections(fullText, headerRegex, tipo){
+  const sections = [];
+  let m;
+  while((m = headerRegex.exec(fullText)) !== null){
+    const start = m.index;
+    const end = fullText.indexOf('Quantidade de documentos:', start);
+    if(end !== -1){
+      sections.push({ start, tableText: fullText.slice(start, end), tipo, devolucao: false });
+    }
+  }
+  return sections;
+}
+
+// Seções de reentrega/devolução podem vir como "REENTREGA / DEVOLUÇÃO CIF",
+// "...FOB" ou sem sufixo. O tipo (CIF/FOB) fica na coluna "Tipo" quando
+// identificável; a devolução em si fica marcada numa coluna própria.
+function findDevolucaoSections(fullText){
+  const headerRegex = /REENTREGA\s*\/\s*DEVOLU[ÇC][ÃA]O(?:\s*(CIF|FOB))?/g;
+  const sections = [];
+  let m;
+  while((m = headerRegex.exec(fullText)) !== null){
+    const start = m.index;
+    const end = fullText.indexOf('Quantidade de documentos:', start);
+    if(end !== -1){
+      sections.push({ start, tableText: fullText.slice(start, end), tipo: m[1] || '—', devolucao: true });
+    }
+  }
+  return sections;
+}
+
+// Nome do transportador fixo neste modelo de fatura (SSW/CDL). Serve de
+// âncora para localizar o nome do pagador, que na ordem real do PDF aparece
+// colado ao nome do transportador. Se esse nome mudar (outra transportadora),
+// o extrator falha alto e avisa, em vez de arriscar um valor errado.
+const NOME_TRANSPORTADOR = 'FABIANA PEREIRA PORTO - ME';
+
+function parseFaturaHeaderInfo(fullText){
+  const errors = [];
+  const info = { pagadorNome: null, numeroFatura: null, emissao: null, vencimento: null, valorDocumento: null };
+
+  // Nome do pagador: aparece logo após o nome do transportador, antes do
+  // rótulo "Pagador:" (ordem real do fluxo do PDF, não a ordem visual).
+  const nameMatch = fullText.match(new RegExp('Recibo do Pagador.*?' + NOME_TRANSPORTADOR + '(.+?)Pagador:'));
+  if(nameMatch){
+    info.pagadorNome = nameMatch[1].trim();
+  } else {
+    errors.push('Não foi possível localizar o nome do pagador na fatura. Confira se o transportador ainda é "' + NOME_TRANSPORTADOR + '" — se mudou, o site precisa ser ajustado.');
+  }
+
+  // Vencimento, nº da fatura e valor: mesmo bloco, na ordem real do PDF.
+  const topMatch = fullText.match(new RegExp(NOME_TRANSPORTADOR + '.+?(\\d{2}\\/\\d{2}\\/\\d{4})\\s*([\\d\\-]+)\\s*([\\d.,]+)'));
+  if(topMatch){
+    info.vencimento = topMatch[1];
+  } else {
+    errors.push('Não foi possível localizar a data de vencimento da fatura.');
+  }
+
+  // Nº da fatura: valida cruzando duas âncoras diferentes do PDF (topo do
+  // documento e o campo "...do Documento:"). Se divergirem, é sinal de que
+  // algo no layout mudou — melhor apontar do que arriscar o valor errado.
+  const docMatches = [...new Set([...fullText.matchAll(/do Documento:?\s*([\d\-]+)/gi)].map(m => m[1]))];
+  const candidatesNumero = new Set(docMatches);
+  if(topMatch) candidatesNumero.add(topMatch[2]);
+
+  if(candidatesNumero.size === 0){
+    errors.push('Não foi possível localizar o número da fatura ("Nº do Documento").');
+  } else if(candidatesNumero.size > 1){
+    errors.push('Foram encontrados números de fatura diferentes no mesmo PDF (' + [...candidatesNumero].join(', ') + '). Confira manualmente.');
+    info.numeroFatura = [...candidatesNumero][0];
+  } else {
+    info.numeroFatura = [...candidatesNumero][0];
+  }
+
+  // Valor do documento: valida cruzando o topo do documento com o "VALOR TOTAL" do resumo.
+  const totalMatches = [...new Set([...fullText.matchAll(/VALOR TOTAL\s*([\d.,]+)/gi)].map(m => m[1]))];
+  const candidatesValor = new Set(totalMatches);
+  if(topMatch) candidatesValor.add(topMatch[3]);
+
+  if(candidatesValor.size === 0){
+    errors.push('Não foi possível localizar o valor total da fatura.');
+  } else if(candidatesValor.size > 1){
+    errors.push('Foram encontrados valores totais diferentes no mesmo PDF (' + [...candidatesValor].join(', ') + '). Confira manualmente antes de lançar no sistema.');
+    info.valorDocumento = [...candidatesValor][0];
+  } else {
+    info.valorDocumento = [...candidatesValor][0];
+  }
+
+  const emissaoMatch = fullText.match(/Emiss[ãa]o:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if(emissaoMatch){
+    info.emissao = emissaoMatch[1];
+  }
+
+  return { info, errors };
+}
+
+function parseFatura(pages){
+  const errors = [];
+  const notices = [];
+  let cnpj = null;
+  const fullText = pages.join('');
+
+  const cnpjMatch = fullText.match(/CNPJ:\s*([\d./-]{14,20})/);
+  if(cnpjMatch){
+    cnpj = onlyDigits(cnpjMatch[1]);
+  } else {
+    errors.push('Não foi possível localizar o CNPJ do pagador na fatura (campo "CNPJ:" não encontrado no texto do PDF).');
+  }
+
+  const headerResult = parseFaturaHeaderInfo(fullText);
+  errors.push(...headerResult.errors);
+
+  // Ordem de checagem importa: seções de devolução são identificadas antes,
+  // pois "REENTREGA / DEVOLUÇÃO FOB" não colide com o texto "FRETE FOB".
+  let sections = [];
+  sections = sections.concat(findDevolucaoSections(fullText));
+  sections = sections.concat(findAllSections(fullText, /FRETE CIF/g, 'CIF'));
+  sections = sections.concat(findAllSections(fullText, /FRETE FOB/g, 'FOB'));
+  sections.sort((a, b) => a.start - b.start);
+
+  if(sections.length === 0){
+    errors.push('Não foi possível localizar nenhuma tabela de frete (CIF, FOB ou devolução) na fatura. Confira se o PDF enviado é a fatura correta e se não é uma imagem escaneada.');
+  }
+
+  const rows = [];
+  let fobCount = 0;
+  let devolucaoCount = 0;
+
+  sections.forEach(section => {
+    const { ctes, nfs, fretes } = extractRowsFromTableText(section.tableText);
+
+    if(ctes.length !== nfs.length){
+      errors.push('Na tabela "' + section.tipo + (section.devolucao ? ' (devolução)' : '') + '" da fatura, a quantidade de CT-e (' + ctes.length + ') e de Notas Fiscais (' + nfs.length + ') é diferente. Confira manualmente.');
+    }
+
+    const count = Math.min(ctes.length, nfs.length) || ctes.length;
+    for(let i = 0; i < count; i++){
+      const cteRaw = ctes[i];
+      rows.push({
+        cteRaw,
+        cte: cteRaw.replace(/^0+/, '') || '0',
+        nf: nfs[i] || null,
+        frete: fretes[i] || null,
+        tipo: section.tipo,
+        devolucao: section.devolucao
+      });
+    }
+
+    if(section.tipo === 'FOB' && !section.devolucao) fobCount += count;
+    if(section.devolucao) devolucaoCount += count;
+  });
+
+  if(fobCount > 0){
+    notices.push('Esta fatura também contém frete FOB (' + fobCount + ' documento(s)), além do CIF — já incluído na tabela abaixo, marcado na coluna "Tipo".');
+  }
+  if(devolucaoCount > 0){
+    notices.push('Esta fatura também contém reentrega/devolução (' + devolucaoCount + ' documento(s)) — já incluído na tabela abaixo, marcado na coluna "Devolução".');
+  }
+
+  return { cnpj, header: headerResult.info, rows, errors, notices };
+}
+
+function parseDacte(pages){
+  const errors = [];
+  const entries = [];
+  const seen = new Set();
+
+  pages.forEach((text, idx) => {
+    const numMatch = text.match(/(\d{7,9})\1RODOVI[ÁA]RIO/);
+    const chaveMatch = text.match(/EMITIDO POR(?:EMITIDO POR)?([\d./\-]+)/);
+
+    if(!numMatch){
+      errors.push('Página ' + (idx + 1) + ' de um dos DACTEs: não foi possível localizar o número do CT-e (campo "NÚMERO"). Confira se o PDF não é uma imagem escaneada.');
+      return;
+    }
+    if(!chaveMatch){
+      errors.push('Página ' + (idx + 1) + ' de um dos DACTEs: CT-e ' + numMatch[1] + ' encontrado, mas não foi possível localizar a chave de acesso do CT-e.');
+      return;
+    }
+
+    const cteRaw = numMatch[1];
+    const cteNum = cteRaw.replace(/^0+/, '') || '0';
+    const chave = dedupeDoubled(onlyDigits(chaveMatch[1]));
+
+    // Em CT-e do tipo "COMPLEMENTAR" não existe NF-e vinculada — o documento
+    // de referência é outro CT-e (campo "CT-E:" em vez de "NF-E:"). Nesse
+    // caso não é um erro, é só um tipo de documento diferente.
+    const chaveNFeMatch = text.match(/NF-E:\s*([\d./\-]+)/i);
+    const chaveCTeRefMatch = !chaveNFeMatch ? text.match(/(?<!TIPO DO )CT-E:\s*([\d./\-]+)/i) : null;
+    let chaveNFe = null;
+    let chaveNFeTipo = null;
+    if(chaveNFeMatch){
+      chaveNFe = dedupeDoubled(onlyDigits(chaveNFeMatch[1]));
+      chaveNFeTipo = 'NFE';
+    } else if(chaveCTeRefMatch){
+      chaveNFe = dedupeDoubled(onlyDigits(chaveCTeRefMatch[1]));
+      chaveNFeTipo = 'CTE';
+    }
+
+    // "FRETE TOTAL (R$)" vem logo após "IMP REPASSADO" no fluxo real do PDF
+    // (não na ordem visual): ICMS, depois FRETE TOTAL, depois VALOR A RECEBER.
+    // Se os dois valores forem idênticos, o dedup devolve só 1 item — nesse
+    // caso ele ainda é o valor correto (ICMS == FRETE TOTAL), não uma falha.
+    const dedupedMoney = extractDedupedMoneyAfter(text, 'IMP REPASSADO', 260);
+    const freteTotal = dedupedMoney && dedupedMoney.length >= 1
+      ? dedupedMoney[Math.min(1, dedupedMoney.length - 1)]
+      : null;
+
+    if(chave.length !== 44){
+      errors.push('Página ' + (idx + 1) + ' de um dos DACTEs: a chave de acesso do CT-e ' + cteRaw + ' tem ' + chave.length + ' dígitos (esperado: 44). Confira manualmente esse documento.');
+    }
+    if(!chaveNFe){
+      errors.push('Página ' + (idx + 1) + ' de um dos DACTEs: CT-e ' + cteRaw + ' encontrado, mas não foi possível localizar a chave de acesso da NF-e (nem uma referência de CT-e).');
+    } else if(chaveNFe.length !== 44){
+      errors.push('Página ' + (idx + 1) + ' de um dos DACTEs: a chave de acesso da NF-e do CT-e ' + cteRaw + ' tem ' + chaveNFe.length + ' dígitos (esperado: 44). Confira manualmente esse documento.');
+    }
+    if(!freteTotal){
+      errors.push('Página ' + (idx + 1) + ' de um dos DACTEs: CT-e ' + cteRaw + ' encontrado, mas não foi possível localizar o valor de "FRETE TOTAL".');
+    }
+
+    const key = cteNum + '|' + chave;
+    if(!seen.has(key)){
+      seen.add(key);
+      entries.push({ cteRaw, cte: cteNum, chave, chaveNFe, chaveNFeTipo, freteTotal });
+    }
+  });
+
+  if(entries.length === 0){
+    errors.push('Não foi possível localizar nenhum CT-e com chave de acesso no(s) DACTE(s) enviado(s). Confira se os PDFs não são imagens escaneadas.');
+  }
+
+  return { entries, errors };
+}
+
+btnProcess.addEventListener('click', async () => {
+  btnProcess.disabled = true;
+  statusLine.textContent = 'Lendo fatura...';
+
+  try{
+    const faturaPages = await extractPdfPages(faturaFile);
+    const fatura = parseFatura(faturaPages);
+
+    statusLine.textContent = 'Lendo DACTE(s)...';
+    let dactePages = [];
+    for(const f of dacteFiles){
+      dactePages = dactePages.concat(await extractPdfPages(f));
+    }
+    const dacte = parseDacte(dactePages);
+
+    statusLine.textContent = 'Comparando CT-e...';
+
+    const results = [];
+    const errors = [...fatura.errors, ...dacte.errors];
+    const warnings = [];
+    const infos = [...fatura.notices];
+
+    const usedDacteKeys = new Set();
+
+    fatura.rows.forEach(row => {
+      const found = dacte.entries.find(d => d.cte === row.cte);
+      if(found){
+        usedDacteKeys.add(found.cte);
+
+        let freteOk = true;
+        const freteFaturaNum = parseMoneyBR(row.frete);
+        const freteDacteNum = parseMoneyBR(found.freteTotal);
+        if(freteFaturaNum !== null && freteDacteNum !== null){
+          if(Math.abs(freteFaturaNum - freteDacteNum) > 0.005){
+            freteOk = false;
+            errors.push('CT-e ' + row.cteRaw + ': o valor de frete diverge entre a fatura (R$ ' + row.frete + ') e o DACTE (R$ ' + found.freteTotal + ').');
+          }
+        } else if(row.frete === null){
+          freteOk = false;
+          errors.push('CT-e ' + row.cteRaw + ': não foi possível localizar o valor de frete na fatura para conferir com o DACTE.');
+        } else if(found.freteTotal === null){
+          freteOk = false;
+          errors.push('CT-e ' + row.cteRaw + ': não foi possível localizar o "FRETE TOTAL" no DACTE para conferir com a fatura.');
+        }
+
+        results.push({
+          tipo: row.tipo, devolucao: row.devolucao, cte: row.cteRaw, nf: row.nf,
+          chave: found.chave, chaveNFe: found.chaveNFe, chaveNFeTipo: found.chaveNFeTipo,
+          freteFatura: row.frete, freteDacte: found.freteTotal,
+          ok: true, freteOk
+        });
+      } else {
+        results.push({
+          tipo: row.tipo, devolucao: row.devolucao, cte: row.cteRaw, nf: row.nf,
+          chave: null, chaveNFe: null,
+          freteFatura: row.frete, freteDacte: null,
+          ok: false, freteOk: false
+        });
+        errors.push('CT-e ' + row.cteRaw + ' (NF ' + row.nf + ') consta na fatura, mas não foi encontrado em nenhum dos DACTEs carregados. Confira se o DACTE desse CT-e foi anexado.');
+      }
+    });
+
+    dacte.entries.forEach(d => {
+      if(!usedDacteKeys.has(d.cte)){
+        warnings.push('CT-e ' + d.cteRaw + ' foi encontrado no(s) DACTE(s) carregado(s), mas não consta na fatura enviada.');
+      }
+    });
+
+    currentResults = results;
+
+    // render
+    document.getElementById('cnpjOut').textContent = fatura.cnpj || '—';
+    document.getElementById('cnpjOut').dataset.raw = fatura.cnpj || '';
+    document.getElementById('pagadorOut').textContent = fatura.header.pagadorNome || '—';
+    document.getElementById('numeroFaturaOut').textContent = fatura.header.numeroFatura || '—';
+    document.getElementById('emissaoOut').textContent = fatura.header.emissao || '—';
+    document.getElementById('vencimentoOut').textContent = fatura.header.vencimento || '—';
+    const valorEl = document.getElementById('valorOut');
+    valorEl.textContent = fatura.header.valorDocumento ? ('R$ ' + fatura.header.valorDocumento) : '—';
+    valorEl.classList.toggle('pending-value', !fatura.header.valorDocumento);
+
+    const tbody = document.getElementById('resultsBody');
+    tbody.innerHTML = '';
+    results.forEach(r => {
+      const tr = document.createElement('tr');
+      if(!r.ok || !r.freteOk) tr.classList.add('err');
+      tr.innerHTML =
+        '<td>' + (r.tipo || '—') + '</td>' +
+        '<td>' + (r.devolucao ? 'Sim' : '—') + '</td>' +
+        '<td>' + r.cte + '</td>' +
+        '<td>' + r.nf + '</td>' +
+        '<td>' + (r.freteFatura ? 'R$ ' + r.freteFatura : 'NÃO ENCONTRADO') + '</td>' +
+        '<td>' + (r.freteDacte ? 'R$ ' + r.freteDacte : 'NÃO ENCONTRADO') + '</td>' +
+        '<td class="chave-cell">' + (r.chave || 'NÃO ENCONTRADA') + '</td>' +
+        '<td class="chave-cell">' + (r.chaveNFe ? (r.chaveNFe + (r.chaveNFeTipo === 'CTE' ? ' (ref. CT-e)' : '')) : 'NÃO ENCONTRADA') + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    const stamp = document.getElementById('stampBadge');
+    if(errors.length > 0){
+      stamp.textContent = 'Pendente';
+      stamp.classList.add('pending');
+    } else {
+      stamp.textContent = 'Conferido';
+      stamp.classList.remove('pending');
+    }
+
+    const infoBox = document.getElementById('infoBox');
+    const infoList = document.getElementById('infoList');
+    infoList.innerHTML = '';
+    if(infos.length > 0){
+      infos.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        infoList.appendChild(li);
+      });
+      infoBox.style.display = 'block';
+    } else {
+      infoBox.style.display = 'none';
+    }
+
+    const errorsBox = document.getElementById('errorsBox');
+    const errorsList = document.getElementById('errorsList');
+    errorsList.innerHTML = '';
+    if(errors.length > 0){
+      errors.forEach(e => {
+        const li = document.createElement('li');
+        li.textContent = e;
+        errorsList.appendChild(li);
+      });
+      errorsBox.style.display = 'block';
+    } else {
+      errorsBox.style.display = 'none';
+    }
+
+    const warningsBox = document.getElementById('warningsBox');
+    const warningsList = document.getElementById('warningsList');
+    warningsList.innerHTML = '';
+    if(warnings.length > 0){
+      warnings.forEach(w => {
+        const li = document.createElement('li');
+        li.textContent = w;
+        warningsList.appendChild(li);
+      });
+      warningsBox.style.display = 'block';
+    } else {
+      warningsBox.style.display = 'none';
+    }
+
+    document.getElementById('results').style.display = 'block';
+    statusLine.textContent = 'Concluído.';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch(err){
+    console.error(err);
+    statusLine.textContent = 'Erro ao processar: ' + err.message;
+  } finally {
+    btnProcess.disabled = false;
+  }
+});
+
+document.addEventListener('click', (e) => {
+  if(e.target.matches('.copy-btn[data-copy-target]')){
+    const targetId = e.target.getAttribute('data-copy-target');
+    const val = document.getElementById(targetId).textContent;
+    navigator.clipboard.writeText(val).then(() => flashCopied(e.target));
+  }
+});
+
+document.getElementById('copyTableBtn').addEventListener('click', (e) => {
+  const rows = Array.from(document.querySelectorAll('#resultsBody tr')).map(tr => {
+    const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+    return cells.join('\t');
+  });
+  const text = 'Tipo\tDevolução\tCT-e\tNota Fiscal\tFrete (Fatura)\tFrete (DACTE)\tChave de Acesso (CT-e)\tChave de Acesso (NF-e)\n' + rows.join('\n');
+  navigator.clipboard.writeText(text).then(() => flashCopied(e.target));
+});
+
+document.getElementById('copyNfsBtn').addEventListener('click', (e) => {
+  const nfs = currentResults.map(r => r.nf).filter(Boolean);
+  navigator.clipboard.writeText(nfs.join('\n')).then(() => flashCopied(e.target));
+});
+
+function flashCopied(btn){
+  const original = btn.textContent;
+  btn.textContent = 'copiado ✓';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.classList.remove('copied');
+  }, 1500);
+}
+</script>
+</body>
+</html>
